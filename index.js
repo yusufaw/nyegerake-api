@@ -1,4 +1,5 @@
 const express = require('express');
+var cron = require('node-cron');
 
 var app = express();
 
@@ -9,4 +10,8 @@ app.listen(portAvailable, function () {
 
 app.get('/', function (req, res) {
   res.send('Hello World!');
+});
+
+cron.schedule('* * * * *', () => {
+  console.log('running a task every minute');
 });
