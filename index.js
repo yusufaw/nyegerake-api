@@ -97,6 +97,6 @@ app.get('/', function (req, res) {
   res.send('Hello World!');
 });
 
-cron.schedule('* * * * *', () => {
-  console.log('running a task every minute');
-});
+// cron.schedule('* * * * *', () => {
+//   console.log('running a task every minute');
+// });
