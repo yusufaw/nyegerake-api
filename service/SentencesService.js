@@ -70,12 +70,27 @@ const SentencesService = () => {
     });
   }
 
+  const getOneSentencByPhrase = (data) => {
+    return new Promise((resolve, reject) => {
+      SentencesModel.findOne(
+        { phrase: data }
+      )
+        .then(result => {
+          resolve(result);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  }
+
   return {
     addNewSentence: addNewSentence,
     removeSentence: removeSentence,
     getOneSentence: getOneSentence,
     addBulkSentences: addBulkSentences,
-    getOneSentenceExcept: getOneSentenceExcept
+    getOneSentenceExcept: getOneSentenceExcept,
+    getOneSentencByPhrase: getOneSentencByPhrase
   }
 };
 

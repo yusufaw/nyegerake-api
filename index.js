@@ -22,11 +22,12 @@ bot.command('quiz', ctx => {
           }]]
 
           const opts = {
+            parse_mode: "Markdown",
             reply_markup: JSON.stringify({
               inline_keyboard: ArrayUtils.shuffle(inKey)
             })
           };
-          ctx.reply("What's the meaning of this phrase?\n\n" + result[0].phrase, opts)
+          ctx.reply("What's the meaning of this phrase?\n\n*" + result[0].phrase + "*", opts)
         }
         )
     })
@@ -48,7 +49,8 @@ bot.command('add', ctx => {
     })
       .then(result => {
         console.log(result)
-        ctx.reply("Successfuly add new phrase!\n\n" + result.phrase + "\n" + result.indonesian)
+        ctx.reply("Successfuly add new phrase!")
+        ctx.reply("*" + result.phrase + "*\n\n_" + result.indonesian + '_', { parse_mode: "Markdown" })
       })
       .catch(err => {
         ctx.reply("Error")
@@ -66,7 +68,23 @@ bot.command('bulk', ctx => {
     }
   })
   SentencesService.addBulkSentences(listOfPhrases)
-})
+});
+
+bot.on('callback_query', async (ctx) => {
+  const phraseQuestion = ctx.callbackQuery.message.text.split("\n\n")[1]
+  console.log(phraseQuestion);
+  SentencesService.getOneSentencByPhrase(phraseQuestion)
+    .then(result => {
+      console.log(result)
+      if (ctx.callbackQuery.data == result.indonesian) {
+        ctx.editMessageText("Excelent 👍")
+        ctx.reply("*" + result.phrase + "*\n\n_" + result.indonesian + '_', { parse_mode: "Markdown" })
+      } else {
+        ctx.editMessageText("Ups, you chose a wrong answer 🙈")
+        ctx.reply("*" + result.phrase + "*\n\n_" + result.indonesian + '_', { parse_mode: "Markdown" })
+      }
+    })
+});
 
 bot.launch()
 
