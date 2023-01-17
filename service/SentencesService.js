@@ -1,7 +1,6 @@
 'use strict';
 
 const SentencesModel = require('../model/SentencesModel');
-const mongoose = require('../lib/db');
 
 const SentencesService = () => {
   const addNewSentence = data => {
@@ -19,9 +18,23 @@ const SentencesService = () => {
 
   const removeSentence = data => {
     return new Promise((resolve, reject) => {
-        SentencesModel.findOneAndRemove({
-          phrase: data.phrase
+      SentencesModel.findOneAndRemove({
+        phrase: data.phrase
+      })
+        .then(result => {
+          resolve(result);
         })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  };
+
+  const getOneSentence = () => {
+    return new Promise((resolve, reject) => {
+      SentencesModel.aggregate(
+        [{ $sample: { size: 1 } }]
+      )
         .then(result => {
           resolve(result);
         })
@@ -31,11 +44,23 @@ const SentencesService = () => {
     });
   }
 
-  const getOneSentence = () => {
+  const addBulkSentences = data => {
     return new Promise((resolve, reject) => {
-        SentencesModel.aggregate(
-          [ { $sample: { size: 1 } } ]
-       )
+      SentencesModel.insertMany(data)
+        .then(result => {
+          resolve(result);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  };
+
+  const getOneSentenceExcept = (data) => {
+    return new Promise((resolve, reject) => {
+      SentencesModel.aggregate(
+        [{ $sample: { size: 1 } }, { '$match': { "phrase": { $ne: data.phrase } } }]
+      )
         .then(result => {
           resolve(result);
         })
@@ -48,7 +73,9 @@ const SentencesService = () => {
   return {
     addNewSentence: addNewSentence,
     removeSentence: removeSentence,
-    getOneSentence: getOneSentence
+    getOneSentence: getOneSentence,
+    addBulkSentences: addBulkSentences,
+    getOneSentenceExcept: getOneSentenceExcept
   }
 };
 
