@@ -3,7 +3,15 @@ var cron = require('node-cron');
 const { Telegraf } = require('telegraf');
 const SentencesService = require('./service/SentencesService');
 const ArrayUtils = require("./utils/ArrayUtils");
+const FileUtils = require("./utils/FileUtils.js");
 require('dotenv').config();
+
+var complimentsBank = [];
+
+FileUtils.getCompliments(compliments => {
+  complimentsBank = compliments
+  console.log(complimentsBank);
+});
 
 var app = express();
 const bot = new Telegraf(process.env.MBOT_TOKEN)
@@ -77,7 +85,8 @@ bot.on('callback_query', async (ctx) => {
     .then(result => {
       console.log(result)
       if (ctx.callbackQuery.data == result.indonesian) {
-        ctx.editMessageText("Excelent 👍")
+        const choosenCompliments = complimentsBank[between(0, complimentsBank.length - 1)]
+        ctx.editMessageText(choosenCompliments)
         ctx.reply("*" + result.phrase + "*\n\n_" + result.indonesian + '_', { parse_mode: "Markdown" })
       } else {
         ctx.editMessageText("Ups, you chose a wrong answer 🙈")
@@ -96,6 +105,12 @@ app.listen(portAvailable, function () {
 app.get('/', function (req, res) {
   res.send('Hello World!');
 });
+
+function between(min, max) {
+  return Math.floor(
+    Math.random() * (max - min + 1) + min
+  )
+}
 
 // cron.schedule('* * * * *', () => {
 //   console.log('running a task every minute');
