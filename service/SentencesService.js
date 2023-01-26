@@ -69,6 +69,20 @@ const SentencesService = () => {
         });
     });
   }
+  
+  const getSentencesExcept = (data) => {
+    return new Promise((resolve, reject) => {
+      SentencesModel.aggregate(
+        [{ $sample: { size: 3 } }, { '$match': { "phrase": { $ne: data.phrase } } }]
+      )
+        .then(result => {
+          resolve(result);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  }
 
   const getOneSentencByPhrase = (data) => {
     return new Promise((resolve, reject) => {
@@ -90,7 +104,8 @@ const SentencesService = () => {
     getOneSentence: getOneSentence,
     addBulkSentences: addBulkSentences,
     getOneSentenceExcept: getOneSentenceExcept,
-    getOneSentencByPhrase: getOneSentencByPhrase
+    getOneSentencByPhrase: getOneSentencByPhrase,
+    getSentencesExcept: getSentencesExcept
   }
 };
 

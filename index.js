@@ -18,7 +18,7 @@ const bot = new Telegraf(process.env.MBOT_TOKEN)
 bot.command('quiz', ctx => {
   SentencesService.getOneSentence()
     .then(result => {
-      SentencesService.getOneSentenceExcept(result[0])
+      SentencesService.getSentencesExcept(result[0])
         .then(hasil => {
           const inKey = [[{
             text: result[0].indonesian,
@@ -27,6 +27,14 @@ bot.command('quiz', ctx => {
           [{
             text: hasil[0].indonesian,
             callback_data: hasil[0].indonesian
+          }],
+          [{
+            text: hasil[1].indonesian,
+            callback_data: hasil[1].indonesian
+          }],
+          [{
+            text: hasil[2].indonesian,
+            callback_data: hasil[2].indonesian
           }]]
 
           const opts = {
