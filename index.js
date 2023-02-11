@@ -7,6 +7,7 @@ const FileUtils = require("./utils/FileUtils.js");
 require('dotenv').config();
 
 var complimentsBank = [];
+const generalErrorMessage = "Ups, something has gone wrong";
 
 FileUtils.getCompliments(compliments => {
   complimentsBank = compliments
@@ -48,7 +49,7 @@ bot.command('quiz', ctx => {
         )
     })
     .catch(err => {
-      console.log("error")
+      console.log(generalErrorMessage)
     });
 })
 
@@ -69,7 +70,7 @@ bot.command('add', ctx => {
         ctx.reply("*" + result.phrase + "*\n\n_" + result.indonesian + '_', { parse_mode: "Markdown" })
       })
       .catch(err => {
-        ctx.reply("Error")
+        ctx.reply(generalErrorMessage)
       })
   }
 })
