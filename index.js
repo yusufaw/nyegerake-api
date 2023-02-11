@@ -54,6 +54,13 @@ bot.command('quiz', ctx => {
 })
 
 bot.command('add', ctx => {
+  const senderId = ctx.message.from.id
+  if (senderId != process.env.ADMIN_SENDER_ID) {
+    ctx.reply("Sorry, you don't have access to add new expression. Please contact admin of this bot.")
+    return;
+  }
+  console.log("Great, you are the admin.");
+
   const content = ctx.message.text.replace('/add ', '');
   const sentence = content.split(" - ")
   if (sentence.length < 2) {
