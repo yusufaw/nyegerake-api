@@ -11,11 +11,11 @@ app.listen(portAvailable, function () {
   console.log('Listening on port ' + portAvailable);
 });
 
-app.get('/', function (req, res) {
-  res.send('Hello World!');
+app.get('/', (req, res) => {
+  res.send('nyegerake service is running');
 });
 
-app.get('/today', function (req, res) {
+app.get('/today', (req, res) => {
   SentencesService.getOneSentence()
     .then(result => {
       const response = {
@@ -25,7 +25,7 @@ app.get('/today', function (req, res) {
       res.send(response);
     })
     .catch(error => {
-      res.send(error)
+      res.send(error);
     })
 });
 
