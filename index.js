@@ -15,7 +15,19 @@ app.get('/', function (req, res) {
   res.send('Hello World!');
 });
 
-
+app.get('/today', function (req, res) {
+  SentencesService.getOneSentence()
+    .then(result => {
+      const response = {
+        "phrase": result[0].phrase,
+        "indonesian": result[0].indonesian
+      }
+      res.send(response);
+    })
+    .catch(error => {
+      res.send(error)
+    })
+});
 
 // cron.schedule('* * * * *', () => {
 //   console.log('running a task every minute');
