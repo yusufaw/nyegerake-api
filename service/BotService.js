@@ -14,40 +14,9 @@ FileUtils.getCompliments(compliments => {
 });
 
 bot.command('quiz', ctx => {
-    SentencesService.getOneSentence()
-        .then(result => {
-            SentencesService.getSentencesExcept(result[0])
-                .then(hasil => {
-                    const inKey = [[{
-                        text: result[0].indonesian,
-                        callback_data: result[0].indonesian
-                    }],
-                    [{
-                        text: hasil[0].indonesian,
-                        callback_data: hasil[0].indonesian
-                    }],
-                    [{
-                        text: hasil[1].indonesian,
-                        callback_data: hasil[1].indonesian
-                    }],
-                    [{
-                        text: hasil[2].indonesian,
-                        callback_data: hasil[2].indonesian
-                    }]]
-
-                    const opts = {
-                        parse_mode: "Markdown",
-                        reply_markup: JSON.stringify({
-                            inline_keyboard: ArrayUtils.shuffle(inKey)
-                        })
-                    };
-                    ctx.reply("What's the meaning of this phrase?\n\n*" + result[0].phrase + "*", opts)
-                }
-                )
-        })
-        .catch(err => {
-            console.log(generalErrorMessage)
-        });
+    getOneRandomQuestion(function (message, opts) {
+        ctx.reply(message, opts)
+    });
 })
 
 bot.command('add', ctx => {
@@ -113,5 +82,48 @@ function between(min, max) {
         Math.random() * (max - min + 1) + min
     )
 }
+
+function getOneRandomQuestion(callback) {
+    SentencesService.getOneSentence()
+        .then(result => {
+            SentencesService.getSentencesExcept(result[0])
+                .then(hasil => {
+                    const inKey = [[{
+                        text: result[0].indonesian,
+                        callback_data: result[0].indonesian
+                    }],
+                    [{
+                        text: hasil[0].indonesian,
+                        callback_data: hasil[0].indonesian
+                    }],
+                    [{
+                        text: hasil[1].indonesian,
+                        callback_data: hasil[1].indonesian
+                    }],
+                    [{
+                        text: hasil[2].indonesian,
+                        callback_data: hasil[2].indonesian
+                    }]]
+
+                    const opts = {
+                        parse_mode: "Markdown",
+                        reply_markup: JSON.stringify({
+                            inline_keyboard: ArrayUtils.shuffle(inKey)
+                        })
+                    };
+                    callback("What's the meaning of this phrase?\n\n*" + result[0].phrase + "*", opts)
+                }
+                )
+        })
+        .catch(err => {
+            console.log(generalErrorMessage)
+        });
+}
+
+exports.sendBotMessage = function (chatId) {
+    getOneRandomQuestion(function (message, opts) {
+        bot.telegram.sendMessage(chatId, message, opts);
+    });
+};
 
 bot.launch()
