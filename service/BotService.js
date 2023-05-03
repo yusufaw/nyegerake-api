@@ -10,8 +10,7 @@ var complimentsBank = [];
 const generalErrorMessage = "Ups, something has gone wrong";
 
 FileUtils.getCompliments(compliments => {
-    complimentsBank = compliments
-    console.log(complimentsBank);
+    complimentsBank = compliments;
 });
 
 bot.command('quiz', ctx => {
