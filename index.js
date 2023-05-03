@@ -15,8 +15,6 @@ app.get('/', function (req, res) {
   res.send('Hello World!');
 });
 
-
-
-// cron.schedule('* * * * *', () => {
-//   console.log('running a task every minute');
-// });
+cron.schedule('0 21 * * *', () => {
+  BotService.sendBotMessage(process.env.SCHEDULED_CHAT_ID);
+});
