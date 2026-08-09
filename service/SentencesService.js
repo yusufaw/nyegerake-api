@@ -98,6 +98,20 @@ const SentencesService = () => {
     });
   }
 
+  const getOneSentenceByIndonesian = (data) => {
+    return new Promise((resolve, reject) => {
+      SentencesModel.findOne(
+        { indonesian: data }
+      )
+        .then(result => {
+          resolve(result);
+        })
+        .catch(err => {
+          reject(err);
+        });
+    });
+  }
+
   return {
     addNewSentence: addNewSentence,
     removeSentence: removeSentence,
@@ -105,6 +119,7 @@ const SentencesService = () => {
     addBulkSentences: addBulkSentences,
     getOneSentenceExcept: getOneSentenceExcept,
     getOneSentencByPhrase: getOneSentencByPhrase,
+    getOneSentenceByIndonesian: getOneSentenceByIndonesian,
     getSentencesExcept: getSentencesExcept
   }
 };

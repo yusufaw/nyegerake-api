@@ -61,12 +61,22 @@ bot.command('bulk', ctx => {
 });
 
 bot.on('callback_query', async (ctx) => {
-    const phraseQuestion = ctx.callbackQuery.message.text.split("\n\n")[1]
-    console.log(phraseQuestion);
-    SentencesService.getOneSentencByPhrase(phraseQuestion)
-        .then(result => {
+    const separatorIndex = ctx.callbackQuery.data.indexOf('|');
+    const direction = ctx.callbackQuery.data.slice(0, separatorIndex);
+    const answer = ctx.callbackQuery.data.slice(separatorIndex + 1);
+    const isReverse = direction === 'id2en';
+
+    const questionText = ctx.callbackQuery.message.text.split("\n\n")[1]
+    console.log(questionText);
+
+    const lookup = isReverse
+        ? SentencesService.getOneSentenceByIndonesian(questionText)
+        : SentencesService.getOneSentencByPhrase(questionText);
+
+    lookup.then(result => {
             console.log(result)
-            if (ctx.callbackQuery.data == result.indonesian) {
+            const correctAnswer = isReverse ? result.phrase : result.indonesian;
+            if (answer == correctAnswer) {
                 const choosenCompliments = complimentsBank[between(0, complimentsBank.length - 1)]
                 ctx.editMessageText(choosenCompliments)
                 ctx.reply("*" + result.phrase + "*\n\n_" + result.indonesian + '_', { parse_mode: "Markdown" })
@@ -88,22 +98,20 @@ function getOneRandomQuestion(callback) {
         .then(result => {
             SentencesService.getSentencesExcept(result[0])
                 .then(hasil => {
-                    const inKey = [[{
-                        text: result[0].indonesian,
-                        callback_data: result[0].indonesian
-                    }],
-                    [{
-                        text: hasil[0].indonesian,
-                        callback_data: hasil[0].indonesian
-                    }],
-                    [{
-                        text: hasil[1].indonesian,
-                        callback_data: hasil[1].indonesian
-                    }],
-                    [{
-                        text: hasil[2].indonesian,
-                        callback_data: hasil[2].indonesian
-                    }]]
+                    const isReverse = Math.random() < 0.5;
+                    const direction = isReverse ? 'id2en' : 'en2id';
+                    const answerField = isReverse ? 'phrase' : 'indonesian';
+                    const promptField = isReverse ? 'indonesian' : 'phrase';
+                    const promptText = isReverse
+                        ? "What's the English translation of this?"
+                        : "What's the meaning of this phrase?";
+
+                    const answers = [result[0], hasil[0], hasil[1], hasil[2]].map(sentence => sentence[answerField]);
+
+                    const inKey = answers.map(answer => ([{
+                        text: answer,
+                        callback_data: direction + '|' + answer
+                    }]));
 
                     const opts = {
                         parse_mode: "Markdown",
@@ -111,7 +119,7 @@ function getOneRandomQuestion(callback) {
                             inline_keyboard: ArrayUtils.shuffle(inKey)
                         })
                     };
-                    callback("What's the meaning of this phrase?\n\n*" + result[0].phrase + "*", opts)
+                    callback(promptText + "\n\n*" + result[0][promptField] + "*", opts)
                 }
                 )
         })
