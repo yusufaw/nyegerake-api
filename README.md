@@ -9,6 +9,13 @@ and a scheduled job pushes a daily quiz to a configured chat.
 - **Telegram bot** (`service/BotService.js`, via [Telegraf](https://telegraf.js.org/))
   - `/quiz` — sends a random phrase with 4 multiple-choice answers (one
     correct, three random distractors) as an inline keyboard.
+  - `/fillblank` — sends a random phrase with one word blanked out (shown as
+    `_` per letter, plus its Indonesian meaning as a hint); reply with the
+    missing word as plain text to check it. Matching is case-insensitive and
+    ignores surrounding whitespace/trailing punctuation. Wrong guesses can be
+    retried as many times as needed; a "Reveal answer" button is always
+    attached to give up and see the answer. Starting a new `/fillblank`
+    replaces any unanswered one.
   - `/add [Phrase] - [Meaning in Indonesian]` — adds a new phrase (admin only,
     checked against `ADMIN_SENDER_ID`).
   - `/bulk` — adds multiple phrases at once, one `Phrase - Meaning` pair per

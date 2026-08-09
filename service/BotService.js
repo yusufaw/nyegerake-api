@@ -8,6 +8,12 @@ require('dotenv').config();
 const bot = new Telegraf(process.env.MBOT_TOKEN)
 var complimentsBank = [];
 const generalErrorMessage = "Ups, something has gone wrong";
+const pendingFillBlanks = new Map();
+const STOPWORDS = new Set([
+    'a', 'an', 'the', 'is', 'am', 'are', 'was', 'were', 'be', 'been', 'being',
+    'to', 'of', 'in', 'on', 'at', 'for', 'and', 'or', 'but', 'with', 'as',
+    'by', 'from', 'it', 'this', 'that', 'your', 'you', 'my', 'i', 'me'
+]);
 
 FileUtils.getCompliments(compliments => {
     complimentsBank = compliments;
@@ -60,7 +66,68 @@ bot.command('bulk', ctx => {
     SentencesService.addBulkSentences(listOfPhrases)
 });
 
+const revealButtonOpts = {
+    reply_markup: JSON.stringify({
+        inline_keyboard: [[{ text: "Reveal answer", callback_data: "reveal_fillblank" }]]
+    })
+};
+
+bot.command('fillblank', ctx => {
+    SentencesService.getOneSentence()
+        .then(result => {
+            const sentence = result[0];
+            const { blanked, answer } = buildBlankedPhrase(sentence.phrase);
+            pendingFillBlanks.set(ctx.chat.id, {
+                answer: answer,
+                phrase: sentence.phrase,
+                indonesian: sentence.indonesian
+            });
+            ctx.reply(
+                "Fill in the missing word!\n\n*" + blanked + "*\n\n_" + sentence.indonesian + "_",
+                Object.assign({ parse_mode: "Markdown" }, revealButtonOpts)
+            );
+        })
+        .catch(err => {
+            ctx.reply(generalErrorMessage);
+        });
+});
+
+bot.on('text', ctx => {
+    const text = ctx.message.text;
+    if (text.startsWith('/')) {
+        return;
+    }
+
+    const pending = pendingFillBlanks.get(ctx.chat.id);
+    if (!pending) {
+        return;
+    }
+
+    const normalize = str => str.trim().toLowerCase().replace(/[.,!?;:]+$/, '');
+    const isCorrect = normalize(text) === normalize(pending.answer);
+
+    if (isCorrect) {
+        pendingFillBlanks.delete(ctx.chat.id);
+        const choosenCompliments = complimentsBank[between(0, complimentsBank.length - 1)]
+        ctx.reply(choosenCompliments)
+        ctx.reply("*" + pending.phrase + "*\n\n_" + pending.indonesian + '_', { parse_mode: "Markdown" })
+    } else {
+        ctx.reply("Ups, that's not it. Try again!", revealButtonOpts)
+    }
+});
+
 bot.on('callback_query', async (ctx) => {
+    if (ctx.callbackQuery.data === 'reveal_fillblank') {
+        const pending = pendingFillBlanks.get(ctx.chat.id);
+        if (!pending) {
+            return;
+        }
+        pendingFillBlanks.delete(ctx.chat.id);
+        ctx.editMessageText("The missing word was *" + pending.answer + "*", { parse_mode: "Markdown" });
+        ctx.reply("*" + pending.phrase + "*\n\n_" + pending.indonesian + '_', { parse_mode: "Markdown" });
+        return;
+    }
+
     const separatorIndex = ctx.callbackQuery.data.indexOf('|');
     const direction = ctx.callbackQuery.data.slice(0, separatorIndex);
     const answer = ctx.callbackQuery.data.slice(separatorIndex + 1);
@@ -91,6 +158,23 @@ function between(min, max) {
     return Math.floor(
         Math.random() * (max - min + 1) + min
     )
+}
+
+function pickBlankIndex(words) {
+    const eligibleIndexes = words
+        .map((word, index) => index)
+        .filter(index => !STOPWORDS.has(words[index].toLowerCase()));
+    const pool = eligibleIndexes.length > 0 ? eligibleIndexes : words.map((word, index) => index);
+    return pool[between(0, pool.length - 1)];
+}
+
+function buildBlankedPhrase(phrase) {
+    const words = phrase.split(' ');
+    const blankIndex = pickBlankIndex(words);
+    const answer = words[blankIndex];
+    const placeholder = '_'.repeat(answer.length);
+    const blanked = words.map((word, index) => index === blankIndex ? placeholder : word).join(' ');
+    return { blanked, answer };
 }
 
 function getOneRandomQuestion(callback) {
